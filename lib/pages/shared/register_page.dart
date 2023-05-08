@@ -1,6 +1,3 @@
-import 'dart:io';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp_management/model/lecturer_details.dart';
 import 'package:fyp_management/model/student_details.dart';
@@ -77,8 +74,7 @@ class _SignUpPageState extends State<SignUpPage> {
               style: TextStyle(fontSize: 18, color: Colors.blue),
             ),
             TextFormField(
-              decoration:
-                  const InputDecoration(hintText: 'eg. Admin KK Kuantan 1'),
+              decoration: const InputDecoration(hintText: 'eg. John Wick'),
               maxLines: 1,
               onSaved: (value) => _userName = value ?? "",
               validator: (value) =>

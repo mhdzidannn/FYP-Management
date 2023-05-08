@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:fyp_management/notifier/user_notifier.dart';
+import 'package:fyp_management/pages/shared/home_page.dart';
 import 'package:provider/provider.dart';
 
 class ClassTransitionPage extends StatefulWidget {
@@ -22,7 +23,9 @@ class _ClassTransitionPageState extends State<ClassTransitionPage> {
     var duration = const Duration(seconds: 2);
     return Timer(duration, () {
       Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => HomePage()));
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
     });
   }
 

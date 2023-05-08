@@ -1,11 +1,11 @@
-import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
-import 'package:fyp_management/pages/shared/register_page.dart';
-import 'package:fyp_management/services/auth_exception_handler.dart';
+import 'package:fyp_management/notifier/user_notifier.dart';
+import 'package:fyp_management/services/auth_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../../notifier/user_notifier.dart';
-import '../../services/auth_service.dart';
+import 'package:email_validator/email_validator.dart';
+import 'package:fyp_management/pages/shared/register_page.dart';
+import 'package:fyp_management/services/auth_exception_handler.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -106,7 +106,7 @@ class _LoginPageState extends State<LoginPage> {
         child: CircleAvatar(
             backgroundColor: Colors.transparent,
             radius: 80.0,
-            child: Image.asset('assets/images/login.png')),
+            child: Image.asset('assets/images/logo.png')),
       ),
     );
   }
@@ -117,8 +117,10 @@ class _LoginPageState extends State<LoginPage> {
       child: Center(
         child: Text(
           'My Health 2.0',
-          style: TextStyle(
-              fontSize: 32, fontFamily: 'Lexis', color: Colors.blue[800]),
+          style: GoogleFonts.alexandria(
+            fontSize: 32,
+            color: Colors.blue[800],
+          ),
         ),
       ),
     );
@@ -224,19 +226,19 @@ class _LoginPageState extends State<LoginPage> {
                     continueToHome(notifier);
                   }
                 } else {
-                  // lecturers account cannot be created under normal flow
                   if (_formKey.currentState!.validate()) {
-                    notifier.setLecturerMode = false;
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => SignUpPage(
-                          email: _email,
-                          password: _password,
-                          isLecturer: notifier.lecturerMode!,
-                        ),
-                      ),
-                    );
+                    dialogSignup();
+                    // notifier.setLecturerMode = false;
+                    // Navigator.push(
+                    //   context,
+                    //   MaterialPageRoute(
+                    //     builder: (context) => SignUpPage(
+                    //       email: _email,
+                    //       password: _password,
+                    //       isLecturer: notifier.lecturerMode!,
+                    //     ),
+                    //   ),
+                    // );
                   }
                 }
               },
@@ -328,16 +330,17 @@ class _LoginPageState extends State<LoginPage> {
                                 InkWell(
                                   splashColor: Colors.blue[800],
                                   onTap: () {
-                                    // notifier.setDealerMode = true;
-                                    // Navigator.push(
-                                    //   context,
-                                    //   MaterialPageRoute(
-                                    //       builder: (context) => SignUpPage(
-                                    //             email: _email,
-                                    //             password: _password,
-                                    //             isDealer: notifier.dealerMode,
-                                    //           )),
-                                    // );
+                                    notifier.setLecturerMode = true;
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => SignUpPage(
+                                          email: _email,
+                                          password: _password,
+                                          isLecturer: notifier.lecturerMode!,
+                                        ),
+                                      ),
+                                    );
                                   },
                                   child: Column(
                                     children: <Widget>[
@@ -352,13 +355,12 @@ class _LoginPageState extends State<LoginPage> {
                                       const Text(
                                         'Admin',
                                         style: TextStyle(
-                                            fontSize: 24,
-                                            fontFamily: 'Lexis',
-                                            color: Colors.black),
+                                          fontSize: 24,
+                                          fontFamily: 'Lexis',
+                                          color: Colors.black,
+                                        ),
                                       ),
-                                      // SizedBox(
-                                      //   height: 19,
-                                      // )
+                                      const SizedBox(height: 19)
                                     ],
                                   ),
                                 )
@@ -375,21 +377,21 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget secondaryButton() {
-    return FlatButton(
+    return TextButton(
       child: RichText(
         text: TextSpan(
-            style: TextStyle(
+            style: const TextStyle(
                 fontSize: 18, fontWeight: FontWeight.w300, color: Colors.black),
             children: <TextSpan>[
               _isLoginForm
                   ? TextSpan(children: <TextSpan>[
-                      TextSpan(text: 'Create an '),
+                      const TextSpan(text: 'Create an '),
                       TextSpan(
                           text: 'account',
                           style: TextStyle(color: Colors.blue[800]))
                     ])
                   : TextSpan(children: <TextSpan>[
-                      TextSpan(text: 'Have an account? '),
+                      const TextSpan(text: 'Have an account? '),
                       TextSpan(
                           text: 'Sign in',
                           style: TextStyle(color: Colors.blue[800]))
@@ -473,131 +475,5 @@ class _LoginPageState extends State<LoginPage> {
             ],
           );
         });
-  }
-
-  Widget _pageForgotPassword() {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text(
-          'Forgot password',
-          style: TextStyle(color: Colors.white),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.blue[900],
-      ),
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).requestFocus(_dismissKeyboard),
-        child: Container(
-          height: MediaQuery.of(context).size.height,
-          color: Colors.white,
-          padding: EdgeInsets.only(top: 25, left: 20, right: 20, bottom: 15),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                //Text('Currently reset password is facing unexpected errors. Will be fixed soon', style: TextStyle(color: Colors.red),),
-
-                showLogo(),
-                emailInputField(),
-                _sendForgotPasswordEmail(),
-
-                //showAppName()
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _sendForgotPasswordEmail() {
-    return Padding(
-      padding: EdgeInsets.only(top: 40, left: 30, right: 30),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Center(
-            child: RaisedButton(
-              onPressed: () async {
-                await _auth.sendPasswordResetEmail(_email);
-                showDialog(
-                    context: context,
-                    child: AlertDialog(
-                      content: Container(
-                        height: 150,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Padding(
-                                padding: EdgeInsets.symmetric(vertical: 10),
-                                child: RichText(
-                                  text: TextSpan(
-                                      style: GoogleFonts.amiko(
-                                          color: Colors.black, fontSize: 16),
-                                      children: <TextSpan>[
-                                        TextSpan(
-                                            text:
-                                                'A password reset link has been sent to '),
-                                        TextSpan(
-                                            text: '$_email',
-                                            style: GoogleFonts.amiko(
-                                                color: Colors.blue)),
-                                      ]),
-                                )),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            GestureDetector(
-                                child: Text(
-                                  'OK',
-                                  style: TextStyle(
-                                      fontSize: 25,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.blue),
-                                ),
-                                onTap: () {
-                                  Navigator.of(context).pop(true);
-                                  Navigator.pop(context);
-                                  //Navigator.pop(context);
-                                }),
-                          ],
-                        ),
-                      ),
-                    ));
-              },
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(80.0)),
-              padding: EdgeInsets.all(0.0),
-              child: Ink(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: <Color>[
-                      Color(0xFF0D47A1),
-                      Color(0xFF1976D2),
-                      Color(0xFF42A5F5),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.all(Radius.circular(80.0)),
-                ),
-                child: Container(
-                  constraints: BoxConstraints(minWidth: 140.0, minHeight: 45.0),
-                  alignment: Alignment.center,
-                  child: Text(
-                    'Reset Password',
-                    style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
