@@ -71,7 +71,7 @@ class _HomePageState extends State<HomePage> {
         userNotifier.currentLecturer = data;
       });
     } else {
-      AuthService().geStudentProfileLocal(userNotifier.userUID!).then((data) {
+      AuthService().getStudentProfileLocal(userNotifier.userUID!).then((data) {
         userNotifier.currentStudent = data;
       });
     }

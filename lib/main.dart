@@ -40,33 +40,35 @@ class MyApp extends StatelessWidget {
                 if (mode.hasData) {
                   if (mode.data!) {
                     return MultiProvider(
-                        providers: [
-                          if (notifier.lecturerMode!) ...{
-                            StreamProvider<LecturerDetails>.value(
-                              value: AuthService().getLecturerProfileStream(
-                                  notifier.userUID ?? ""),
-                              initialData: LecturerDetails(
-                                email: '',
-                                phone: '',
-                                username: '',
-                              ),
-                            )
-                          } else ...{
-                            StreamProvider<StudentDetails>.value(
-                              value: AuthService().getStudentProfileStream(
-                                  notifier.userUID ?? ""),
-                              initialData: StudentDetails(
-                                email: '',
-                                phone: '',
-                                username: '',
-                              ),
-                            )
-                          },
-                        ],
-                        child: MaterialApp(
-                            debugShowCheckedModeBanner: false,
-                            theme: ThemeData(primaryColor: Colors.blue[800]),
-                            home: const ClassTransitionPage()));
+                      providers: [
+                        if (notifier.lecturerMode!) ...{
+                          StreamProvider<LecturerDetails>.value(
+                            value: AuthService().getLecturerProfileStream(
+                                notifier.userUID ?? ""),
+                            initialData: LecturerDetails(
+                              email: '',
+                              phone: '',
+                              username: '',
+                            ),
+                          )
+                        } else ...{
+                          StreamProvider<StudentDetails>.value(
+                            value: AuthService().getStudentProfileStream(
+                                notifier.userUID ?? ""),
+                            initialData: StudentDetails(
+                              email: '',
+                              phone: '',
+                              username: '',
+                            ),
+                          )
+                        },
+                      ],
+                      child: MaterialApp(
+                        debugShowCheckedModeBanner: false,
+                        theme: ThemeData(primaryColor: Colors.blue[800]),
+                        home: const ClassTransitionPage(),
+                      ),
+                    );
                   } else {
                     AuthService().signOut(notifier);
                     return Container();

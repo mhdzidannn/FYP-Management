@@ -46,32 +46,32 @@ class MainDrawer extends StatelessWidget {
               accountEmail: Text(notifier.getLecturerDetails!.email))
         } else ...{
           UserAccountsDrawerHeader(
-              decoration: const BoxDecoration(
-                gradient:
-                    LinearGradient(colors: [Colors.blue, Colors.lightBlue]),
-              ),
-              currentAccountPicture: ClipOval(
-                child: Material(
-                  color: Colors.indigo,
-                  child: InkWell(
-                    splashColor: Colors.lightBlueAccent,
-                    child: const SizedBox(
-                        width: 30,
-                        height: 30,
-                        child: Icon(
-                          Icons.account_circle,
-                          size: 40,
-                          color: Colors.white,
-                        )),
-                    onTap: () {},
-                  ),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(colors: [Colors.blue, Colors.lightBlue]),
+            ),
+            currentAccountPicture: ClipOval(
+              child: Material(
+                color: Colors.indigo,
+                child: InkWell(
+                  splashColor: Colors.lightBlueAccent,
+                  child: const SizedBox(
+                      width: 30,
+                      height: 30,
+                      child: Icon(
+                        Icons.account_circle,
+                        size: 40,
+                        color: Colors.white,
+                      )),
+                  onTap: () {},
                 ),
               ),
-              accountName: Text(
-                notifier.getStudentDetails!.username,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              accountEmail: Text(notifier.getStudentDetails!.email))
+            ),
+            accountName: Text(
+              notifier.getStudentDetails?.username ?? "",
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            accountEmail: Text(notifier.getStudentDetails?.email ?? ""),
+          )
         },
         ListTile(
           title: const Text('FAQ'),

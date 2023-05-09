@@ -103,18 +103,13 @@ class _SignUpPageState extends State<SignUpPage> {
               decoration: const InputDecoration(hintText: 'eg. 0123456789'),
               maxLines: 1,
               validator: (value) {
-                if (!isLecturer) {
-                  if (!regex.hasMatch(value ?? "")) {
-                    return 'Enter a valid Malaysian phone number';
-                  } else {
-                    return null;
-                  }
+                if (!regex.hasMatch(value ?? "")) {
+                  return 'Enter a valid Malaysian phone number';
+                }
+                if (value == null && value!.isEmpty) {
+                  return 'Enter a valid Malaysian phone number';
                 } else {
-                  if (value == null && value!.isEmpty) {
-                    return 'Enter a valid Malaysian phone number';
-                  } else {
-                    return null;
-                  }
+                  return null;
                 }
               },
               onChanged: (value) {

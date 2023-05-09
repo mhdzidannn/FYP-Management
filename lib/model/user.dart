@@ -5,17 +5,17 @@ class UserBaseDetail {
 }
 
 class UserGeneralInfo {
-  List listOfUID = [];
+  late List listOfUID;
 
   UserGeneralInfo({
     required this.listOfUID,
   });
 
-  UserGeneralInfo.fromMapUser(Map<String, dynamic> data) {
-    listOfUID = data['listOfUID'];
+  UserGeneralInfo.fromMapUser(Map<String, dynamic>? data) {
+    listOfUID = data?['UID'];
   }
 
-  UserGeneralInfo.fromMapDealer(Map<String, dynamic> data) {
-    listOfUID = data['listOfUID'];
+  UserGeneralInfo.fromMapDealer(Map<String, dynamic>? data) {
+    listOfUID = data?['UID'];
   }
 }

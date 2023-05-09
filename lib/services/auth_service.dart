@@ -39,7 +39,7 @@ class AuthService {
     return FirebaseFirestore.instance
         .collection("UserData")
         .doc("Student")
-        .collection("StudentProfile")
+        .collection("UserProfile")
         .doc(uid)
         .snapshots()
         .map((event) => StudentDetails.fromMap(event.data()));
@@ -55,14 +55,16 @@ class AuthService {
         .then((snapshot) => LecturerDetails.fromMap(snapshot.data()));
   }
 
-  Future<StudentDetails> geStudentProfileLocal(String uid) async {
+  Future<StudentDetails> getStudentProfileLocal(String uid) async {
     return await FirebaseFirestore.instance
         .collection("UserData")
         .doc("Student")
-        .collection("StudentProfile")
+        .collection("UserProfile")
         .doc(uid)
         .get()
-        .then((snapshot) => StudentDetails.fromMap(snapshot.data()));
+        .then((snapshot) {
+      return StudentDetails.fromMap(snapshot.data());
+    });
   }
 
   //auth to change user stream
@@ -96,19 +98,21 @@ class AuthService {
       return await Future.wait(<Future<DocumentSnapshot>>[
         getStudentGeneralInformation(),
         getLecturerGeneralInformation()
-      ]).then((data) {
-        UserGeneralInfo studentInfo =
-            UserGeneralInfo.fromMapUser(data[0].data as Map<String, dynamic>);
-        UserGeneralInfo lecturerInfo =
-            UserGeneralInfo.fromMapUser(data[1].data as Map<String, dynamic>);
+      ]).then((futureCalls) {
+        UserGeneralInfo studentInfo = UserGeneralInfo.fromMapUser(
+            futureCalls[0].data() as Map<String, dynamic>);
+        UserGeneralInfo lecturerInfo = UserGeneralInfo.fromMapDealer(
+            futureCalls[1].data() as Map<String, dynamic>);
 
         if (lecturerInfo.listOfUID.contains(notifier.userUID)) {
-          print("[Firebase] THe current user is a admin");
+          print("[Firebase] The current user is a admin");
+          // notifier.currentLecturer =
           notifier.setLecturerMode = true;
           return true;
         }
         if (studentInfo.listOfUID.contains(notifier.userUID)) {
           print("[Firebase] The current user is a user");
+          // notifier.currentStudent =
           notifier.setLecturerMode = false;
           return true;
         } else {
@@ -143,7 +147,6 @@ class AuthService {
     return status;
   }
 
-  // method to register
   Future<bool> signUpWithEmailAndPassword(
     UserNotifier notifier,
     bool isLecturer,
@@ -164,8 +167,11 @@ class AuthService {
         if (isLecturer) {
           return FirebaseFirestore.instance.runTransaction((transaction) async {
             await transaction.get(lecturer).then((snapshot) async {
+              if (!snapshot.exists) {
+                return;
+              }
               UserGeneralInfo recent = UserGeneralInfo.fromMapDealer(
-                  snapshot.data as Map<String, dynamic>);
+                  snapshot.data() as Map<String, dynamic>);
               recent.listOfUID.add(result.user?.uid);
               transaction.update(snapshot.reference,
                   {'UID': FieldValue.arrayUnion(recent.listOfUID)});
@@ -185,10 +191,13 @@ class AuthService {
         } else {
           return FirebaseFirestore.instance.runTransaction((transaction) async {
             await transaction.get(student).then((snapshot) async {
+              if (!snapshot.exists) {
+                return;
+              }
               UserGeneralInfo recent = UserGeneralInfo.fromMapUser(
-                  snapshot.data as Map<String, dynamic>);
+                  snapshot.data() as Map<String, dynamic>);
               recent.listOfUID.add(result.user?.uid);
-              await transaction.update(snapshot.reference,
+              transaction.update(snapshot.reference,
                   {'UID': FieldValue.arrayUnion(recent.listOfUID)});
             });
           }).then((_) async {

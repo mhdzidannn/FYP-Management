@@ -153,7 +153,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  //PASSWORD INPUT
   Widget passwordInputField() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(10, 30.0, 30, 0.0),
@@ -228,17 +227,6 @@ class _LoginPageState extends State<LoginPage> {
                 } else {
                   if (_formKey.currentState!.validate()) {
                     dialogSignup();
-                    // notifier.setLecturerMode = false;
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder: (context) => SignUpPage(
-                    //       email: _email,
-                    //       password: _password,
-                    //       isLecturer: notifier.lecturerMode!,
-                    //     ),
-                    //   ),
-                    // );
                   }
                 }
               },
@@ -249,7 +237,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  //Dialog for toggling page mode
   dialogSignup() {
     showDialog(
         context: context,
@@ -311,7 +298,7 @@ class _LoginPageState extends State<LoginPage> {
                                         ),
                                       ),
                                       const Text(
-                                        'User',
+                                        'Student',
                                         style: TextStyle(
                                             fontSize: 24,
                                             fontFamily: 'Lexis',
@@ -353,7 +340,7 @@ class _LoginPageState extends State<LoginPage> {
                                         ),
                                       ),
                                       const Text(
-                                        'Admin',
+                                        'Lecturer',
                                         style: TextStyle(
                                           fontSize: 24,
                                           fontFamily: 'Lexis',

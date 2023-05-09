@@ -16,7 +16,7 @@ class UserNotifier with ChangeNotifier {
   set setLecturerMode(bool? mode) {
     _isLecturer = mode;
     if (_isLecturer == null) {
-      print("[UserNotifier] User/Admin Mode Resetted");
+      print("[UserNotifier] Student/Lecturer Mode Resetted");
       return;
     }
     if (_isLecturer!) {

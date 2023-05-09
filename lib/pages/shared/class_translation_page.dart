@@ -41,8 +41,8 @@ class _ClassTransitionPageState extends State<ClassTransitionPage> {
               padding: const EdgeInsets.only(bottom: 20),
               child: Text(
                 notifier.lecturerMode!
-                    ? 'Signing In to Admin Account'
-                    : 'Signing in to Users Account',
+                    ? 'Signing In to Lecturer Account'
+                    : 'Signing in to Student Account',
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
