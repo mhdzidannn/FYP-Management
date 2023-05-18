@@ -2,9 +2,10 @@ import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp_management/firebase_options.dart';
-import 'package:fyp_management/model/lecturer_details.dart';
-import 'package:fyp_management/model/student_details.dart';
-import 'package:fyp_management/model/user.dart';
+import 'package:fyp_management/model/auth/lecturer_details.dart';
+import 'package:fyp_management/model/auth/student_details.dart';
+import 'package:fyp_management/model/auth/user.dart';
+import 'package:fyp_management/notifier/lecturer_title_notifier.dart';
 import 'package:fyp_management/notifier/user_notifier.dart';
 import 'package:provider/provider.dart';
 import 'pages/shared/class_translation_page.dart';
@@ -62,6 +63,9 @@ class MyApp extends StatelessWidget {
                             ),
                           )
                         },
+                        ChangeNotifierProvider(
+                          create: (context) => FYPTitleNotifier(),
+                        ),
                       ],
                       child: MaterialApp(
                         debugShowCheckedModeBanner: false,

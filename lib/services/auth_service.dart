@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:fyp_management/model/lecturer_details.dart';
-import 'package:fyp_management/model/student_details.dart';
-import 'package:fyp_management/model/user.dart';
+import 'package:fyp_management/model/auth/lecturer_details.dart';
+import 'package:fyp_management/model/auth/student_details.dart';
+import 'package:fyp_management/model/auth/user.dart';
 import 'package:fyp_management/notifier/user_notifier.dart';
 
 import 'auth_exception_handler.dart';

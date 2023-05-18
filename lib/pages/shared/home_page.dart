@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:fyp_management/pages/lecturer/temp_page.dart';
+import 'package:fyp_management/pages/lecturer/lecturer_fyp_title_list.dart';
+import 'package:fyp_management/pages/student/temp_page.dart';
 import 'package:fyp_management/pages/shared/main_drawer.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:line_icons/line_icons.dart';
@@ -8,39 +9,25 @@ import 'package:provider/provider.dart';
 import '../../notifier/user_notifier.dart';
 import '../../services/auth_service.dart';
 
-List<GButton> userNavBar = [
-  const GButton(
+const List<GButton> studentNavBar = [
+  GButton(
     icon: Icons.rss_feed,
     text: 'News',
   ),
-  const GButton(
-    icon: Icons.fastfood,
-    text: 'Food Diary',
-  ),
-  const GButton(
-    icon: Icons.local_hospital,
-    text: 'Clinic',
-  ),
-  const GButton(icon: LineIcons.calendar, text: 'Appointments'),
-  const GButton(icon: LineIcons.clock, text: 'Prescriptions')
-];
-
-List<GButton> dealerNavBar = [
-  const GButton(
-    icon: Icons.rss_feed,
-    text: 'News',
-  ),
-  const GButton(
-    icon: Icons.local_hospital,
-    text: 'Clinic',
-  ),
-  const GButton(
+  GButton(
     icon: Icons.fastfood,
     text: 'Food',
   ),
-  const GButton(
-    icon: Icons.person_outline,
-    text: 'Admin Management',
+];
+
+const List<GButton> lecturerNavBar = [
+  GButton(
+    icon: Icons.rss_feed,
+    text: 'FYP Titles',
+  ),
+  GButton(
+    icon: Icons.file_copy,
+    text: 'Active titles',
   ),
 ];
 
@@ -85,66 +72,67 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<UserNotifier>(builder: (context, notifier, widget) {
-      return Scaffold(
-        key: scaffoldKey,
-        drawer: MainDrawer(),
-        body: PageView(
+    return Consumer<UserNotifier>(
+      builder: (context, notifier, widget) {
+        return Scaffold(
+          key: scaffoldKey,
+          drawer: MainDrawer(),
+          body: PageView(
             onPageChanged: (index) {
               _selectedIndex = index;
             },
-            physics: NeverScrollableScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             controller: pageController,
             children: <Widget>[
               if (notifier.lecturerMode!) ...{
-                TempPage(key: UniqueKey()),
-                TempPage(key: UniqueKey()),
-                TempPage(key: UniqueKey()),
+                const LectFYPTitleListPage(),
                 TempPage(key: UniqueKey()),
               } else ...{
                 TempPage(key: UniqueKey()),
                 TempPage(key: UniqueKey()),
-                TempPage(key: UniqueKey()),
-                TempPage(key: UniqueKey()),
-                TempPage(key: UniqueKey()),
               }
-            ]),
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            gradient:
-                const LinearGradient(colors: [Colors.lightBlue, Colors.blue]),
-            boxShadow: [
-              BoxShadow(blurRadius: 20, color: Colors.black.withOpacity(.1))
             ],
           ),
-          child: SafeArea(
-            child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 15.0, vertical: 6),
-              child: GNav(
-                gap: 8,
-                activeColor: Colors.white,
-                iconSize: 24,
+          bottomNavigationBar: Container(
+            decoration: BoxDecoration(
+              gradient:
+                  const LinearGradient(colors: [Colors.lightBlue, Colors.blue]),
+              boxShadow: [
+                BoxShadow(blurRadius: 20, color: Colors.black.withOpacity(.1))
+              ],
+            ),
+            child: SafeArea(
+              child: Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                duration: const Duration(milliseconds: 800),
-                tabBackgroundColor: Colors.blue,
-                tabs: notifier.lecturerMode! ? dealerNavBar : userNavBar,
-                selectedIndex: _selectedIndex,
-                onTabChange: (index) {
-                  setState(() {
-                    _selectedIndex = index;
-                    pageController.animateToPage(index,
-                        duration: const Duration(milliseconds: 200),
-                        curve: Curves.ease);
-                    // pageController.jumpToPage(index);
-                  });
-                },
+                    const EdgeInsets.symmetric(horizontal: 15.0, vertical: 6),
+                child: GNav(
+                  gap: 8,
+                  activeColor: Colors.white,
+                  iconSize: 24,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  duration: const Duration(milliseconds: 800),
+                  tabBackgroundColor: Colors.blue,
+                  tabs: notifier.lecturerMode! ? lecturerNavBar : studentNavBar,
+                  selectedIndex: _selectedIndex,
+                  onTabChange: (index) {
+                    setState(
+                      () {
+                        _selectedIndex = index;
+                        pageController.animateToPage(
+                          index,
+                          duration: const Duration(milliseconds: 200),
+                          curve: Curves.ease,
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
             ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
   }
 }

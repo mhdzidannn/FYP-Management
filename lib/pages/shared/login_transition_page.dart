@@ -20,6 +20,7 @@ class _LoginTransitionPageState extends State<LoginTransitionPage> {
   startTimer() async {
     var duration = const Duration(seconds: 1);
     return Timer(duration, () {
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginPage()),

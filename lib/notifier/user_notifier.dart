@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
-import 'package:fyp_management/model/lecturer_details.dart';
-import 'package:fyp_management/model/student_details.dart';
+import 'package:fyp_management/model/auth/lecturer_details.dart';
+import 'package:fyp_management/model/auth/student_details.dart';
 
 class UserNotifier with ChangeNotifier {
   StudentDetails? _studentDetails;

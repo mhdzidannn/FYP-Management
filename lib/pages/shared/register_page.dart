@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:fyp_management/model/lecturer_details.dart';
-import 'package:fyp_management/model/student_details.dart';
+import 'package:fyp_management/model/auth/lecturer_details.dart';
+import 'package:fyp_management/model/auth/student_details.dart';
 import 'package:provider/provider.dart';
 
 import '../../notifier/user_notifier.dart';
