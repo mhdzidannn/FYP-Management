@@ -11,18 +11,19 @@ class FYPTitle {
   String? link;
   List<dynamic>? files = [];
   List<File>? filesToUpload = [];
+  late String nameOfLecturer;
 
-  FYPTitle({
-    required this.uid,
-    this.docID,
-    required this.title,
-    required this.content,
-    required this.dateCreated,
-    this.dateUpdated,
-    this.link,
-    this.files,
-    this.filesToUpload,
-  });
+  FYPTitle(
+      {required this.uid,
+      this.docID,
+      required this.title,
+      required this.content,
+      required this.dateCreated,
+      this.dateUpdated,
+      this.link,
+      this.files,
+      this.filesToUpload,
+      required this.nameOfLecturer});
 
   set setFileURL(List data) {
     files = data;
@@ -37,6 +38,7 @@ class FYPTitle {
       "dateUpdated": dateUpdated,
       'link': link,
       'files': files,
+      'nameOfLecturer': nameOfLecturer,
     };
   }
 
@@ -49,5 +51,6 @@ class FYPTitle {
     link = data?['link'];
     files = data?["files"];
     docID = documentID;
+    nameOfLecturer = data?["nameOfLecturer"];
   }
 }

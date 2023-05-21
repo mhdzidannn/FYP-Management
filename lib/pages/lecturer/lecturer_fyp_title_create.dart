@@ -297,6 +297,7 @@ class _LecturerCreateFYPTitleState extends State<LecturerCreateFYPTitle> {
                 link: _linkController.text,
                 filesToUpload: _files,
                 dateCreated: Timestamp.now(),
+                nameOfLecturer: notifier.getLecturerDetails!.username,
               );
               _onSubmitPressed(model, notifier);
             }

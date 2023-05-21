@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fyp_management/pages/lecturer/lecturer_fyp_title_list.dart';
+import 'package:fyp_management/pages/student/student_fyp_title_list.dart';
 import 'package:fyp_management/pages/student/temp_page.dart';
 import 'package:fyp_management/pages/shared/main_drawer.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
@@ -12,11 +13,11 @@ import '../../services/auth_service.dart';
 const List<GButton> studentNavBar = [
   GButton(
     icon: Icons.rss_feed,
-    text: 'News',
+    text: 'FYP Titles',
   ),
   GButton(
-    icon: Icons.fastfood,
-    text: 'Food',
+    icon: Icons.rss_feed,
+    text: 'Active titles',
   ),
 ];
 
@@ -26,7 +27,7 @@ const List<GButton> lecturerNavBar = [
     text: 'FYP Titles',
   ),
   GButton(
-    icon: Icons.file_copy,
+    icon: Icons.rss_feed,
     text: 'Active titles',
   ),
 ];
@@ -88,7 +89,7 @@ class _HomePageState extends State<HomePage> {
                 const LectFYPTitleListPage(),
                 TempPage(key: UniqueKey()),
               } else ...{
-                TempPage(key: UniqueKey()),
+                StudentFypTitleListPage(key: UniqueKey()),
                 TempPage(key: UniqueKey()),
               }
             ],

@@ -7,8 +7,10 @@ import 'package:fyp_management/model/lecturer_titles/fyp_title.dart';
 import 'package:fyp_management/notifier/user_notifier.dart';
 
 class FYPTitleService {
-  CollectionReference _fypTitlesCollection =
-      FirebaseFirestore.instance.collection('FYPTitles');
+  final CollectionReference _publicTitlesCollection =
+      FirebaseFirestore.instance.collection('PublicTitles');
+  final CollectionReference _allTitlesCollection =
+      FirebaseFirestore.instance.collection('AllTitles');
 
   final _lectDocRef = FirebaseFirestore.instance
       .collection("UserData")
@@ -26,7 +28,8 @@ class FYPTitleService {
           .then((value) async {
         if (user.lecturerMode!) {
           model.setFileURL = value[0];
-          _fypTitlesCollection.add(model.toMap()).then((doc) {
+          _publicTitlesCollection.add(model.toMap());
+          _allTitlesCollection.add(model.toMap()).then((doc) {
             _lectDocRef.doc(user.userUID).update({
               'fyp_title': FieldValue.arrayUnion([doc.id])
             });
@@ -35,7 +38,8 @@ class FYPTitleService {
           });
         } else {
           model.setFileURL = value[0];
-          _fypTitlesCollection.add(model.toMap()).then((doc) {
+          _publicTitlesCollection.add(model.toMap());
+          _allTitlesCollection.add(model.toMap()).then((doc) {
             _studentDocRef.doc(user.userUID).update({
               'fyp_title': FieldValue.arrayUnion([doc.id])
             });
@@ -57,6 +61,7 @@ class FYPTitleService {
     String title,
   ) async {
     List<String> storageURL = [];
+    int index = 0;
 
     if (files == null) {
       return [""];
@@ -67,9 +72,10 @@ class FYPTitleService {
 
       var snapshot = await FirebaseStorage.instance
           .ref()
-          .child('fypTitles/$userUID/$title')
+          .child('fypTitles/$userUID/$title $index')
           .putData(fileBytes);
 
+      index++;
       if (snapshot.state == TaskState.success) {
         String downloadUrl = await snapshot.ref.getDownloadURL();
         storageURL.add(downloadUrl);
@@ -86,8 +92,20 @@ class FYPTitleService {
   }
 
   Stream<List<FYPTitle>> getTitle(String uid) {
-    return _fypTitlesCollection
+    return _allTitlesCollection
         .where('uid', isEqualTo: uid)
+        .orderBy('dateCreated', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((data) => FYPTitle.fromMap(
+                  data.data() as Map<String, dynamic>?,
+                  data.id,
+                ))
+            .toList());
+  }
+
+  Stream<List<FYPTitle>> getTitleForStudent() {
+    return _publicTitlesCollection
         .orderBy('dateCreated', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs
@@ -102,10 +120,11 @@ class FYPTitleService {
     WriteBatch batchWrite = FirebaseFirestore.instance.batch();
 
     try {
-      batchWrite.delete(_fypTitlesCollection.doc(dataModel.docID));
+      batchWrite.delete(_allTitlesCollection.doc(dataModel.docID));
 
       await batchWrite.commit().then((_) async {
-        _fypTitlesCollection.doc(dataModel.uid).delete();
+        _allTitlesCollection.doc(dataModel.uid).delete();
+        _publicTitlesCollection.doc(dataModel.uid).delete();
         if (user.lecturerMode!) {
           _lectDocRef.doc(user.userUID).update({
             'fyp_title': FieldValue.arrayRemove([dataModel.uid])

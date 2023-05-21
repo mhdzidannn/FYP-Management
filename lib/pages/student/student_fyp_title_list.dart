@@ -13,24 +13,22 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../notifier/user_notifier.dart';
 import 'package:path_provider/path_provider.dart';
 
-class LectFYPTitleListPage extends StatefulWidget {
-  const LectFYPTitleListPage({super.key});
+class StudentFypTitleListPage extends StatefulWidget {
+  const StudentFypTitleListPage({super.key});
 
   @override
-  State<LectFYPTitleListPage> createState() => _LectFYPTitleListPage();
+  State<StudentFypTitleListPage> createState() => _StudentFypTitleListPage();
 }
 
-class _LectFYPTitleListPage extends State<LectFYPTitleListPage> {
-  late String _uid;
-  late bool _deleteMode;
+class _StudentFypTitleListPage extends State<StudentFypTitleListPage> {
+  late bool _selectMode;
   late Stream<List<FYPTitle>> _fypTitleStream;
 
   @override
   void initState() {
     UserNotifier noti = Provider.of<UserNotifier>(context, listen: false);
-    _uid = noti.userUID!;
-    _deleteMode = false;
-    _fypTitleStream = FYPTitleService().getTitle(_uid);
+    _selectMode = false;
+    _fypTitleStream = FYPTitleService().getTitleForStudent();
     super.initState();
   }
 
@@ -42,32 +40,13 @@ class _LectFYPTitleListPage extends State<LectFYPTitleListPage> {
         title: const Text('FYP Titles'),
         actions: <Widget>[
           IconButton(
-            icon: _deleteMode
-                ? const Icon(Icons.cancel)
-                : const Icon(Icons.delete),
-            onPressed: () => setState(() => _deleteMode = !_deleteMode),
+            icon:
+                _selectMode ? const Icon(Icons.cancel) : const Icon(Icons.send),
+            onPressed: () => setState(() => _selectMode = !_selectMode),
           )
         ],
       ),
       drawer: MainDrawer(),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: Colors.blue[700],
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const LecturerCreateFYPTitle(),
-          ),
-        ),
-        label: const Text(
-          'Create New Title',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        icon: const Icon(
-          Icons.add,
-          color: Colors.white,
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: StreamBuilder<List<FYPTitle>>(
         stream: _fypTitleStream,
         builder: (context, snapshot) {
@@ -138,7 +117,7 @@ class _LectFYPTitleListPage extends State<LectFYPTitleListPage> {
       );
     }
 
-    deleteAlertDialog() {
+    selectTitleAlertDialog() {
       Widget cancelButton = TextButton(
         child: const Text("Cancel"),
         onPressed: () {
@@ -254,18 +233,18 @@ class _LectFYPTitleListPage extends State<LectFYPTitleListPage> {
               ],
             ),
           ),
-          if (_deleteMode) ...{
+          if (_selectMode) ...{
             Positioned(
               top: 10,
               right: 10,
               child: CircleAvatar(
-                backgroundColor: Colors.black,
+                backgroundColor: Colors.grey[200],
                 child: IconButton(
                   onPressed: () {
-                    deleteAlertDialog();
+                    selectTitleAlertDialog();
                   },
-                  icon: const Icon(Icons.delete),
-                  color: Colors.red,
+                  icon: const Icon(Icons.send),
+                  color: Colors.blue,
                 ),
               ),
             )
@@ -279,20 +258,19 @@ class _LectFYPTitleListPage extends State<LectFYPTitleListPage> {
     Completer<File> completer = Completer();
     print("Start download file from internet!");
     try {
-      final filename = url.substring(url.lastIndexOf("/") + 1);
       var request = await HttpClient().getUrl(Uri.parse(url));
       var response = await request.close();
       var bytes = await consolidateHttpClientResponseBytes(response);
       var dir = await getApplicationDocumentsDirectory();
       print("Download files");
-      print("${dir.path}/$filename");
-      File file = File("${dir.path}/$filename");
+      File file = File("${dir.path}");
 
       await file.writeAsBytes(bytes, flush: true);
       completer.complete(file);
     } catch (e) {
       throw Exception('Error parsing asset file!');
     }
+
     return completer.future;
   }
 }
