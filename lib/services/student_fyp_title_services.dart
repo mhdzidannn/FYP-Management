@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/services.dart';
+import 'package:fyp_management/model/student/project_logs.dart';
 import 'package:fyp_management/model/student/student_proposal.dart';
 import 'package:fyp_management/notifier/user_notifier.dart';
 
@@ -94,5 +95,79 @@ class StudentService {
                   data.id,
                 ))
             .toList());
+  }
+
+  Future<bool> addLog(UserNotifier user, ProjectLogs model) async {
+    try {
+      return Future.wait([
+        uploadLogFiles(model.filesToUpload, user.userUID!, model.summary)
+      ]).then((value) async {
+        model.setFileURL = value[0];
+        _proposalCollection
+            .doc(model.projectUID)
+            .collection("Logs")
+            .add(model.toMap())
+            .then((doc) {
+          print("[StudentService] Succesfully upload StudentService doc");
+          return true;
+        });
+        return false;
+      });
+    } catch (e) {
+      print("[StudentService] Error in adding title : ${e.toString()}");
+      return false;
+    }
+  }
+
+  Future<List<String>> uploadLogFiles(
+    List<File>? files,
+    String userUID,
+    String title,
+  ) async {
+    List<String> storageURL = [];
+    int index = 0;
+
+    if (files == null) {
+      return [""];
+    }
+
+    for (var file in files) {
+      Uint8List fileBytes = await file.readAsBytes();
+
+      var snapshot = await FirebaseStorage.instance
+          .ref()
+          .child('logs/$userUID/$title $index')
+          .putData(fileBytes);
+
+      index++;
+      if (snapshot.state == TaskState.success) {
+        String downloadUrl = await snapshot.ref.getDownloadURL();
+        storageURL.add(downloadUrl);
+        print('[FirebaseStorage] Success Upload');
+      } else {
+        print(
+            '[FirebaseStorage] Error during upload : ${snapshot.state.toString()}');
+        throw ('[FirebaseStorage] Error during upload');
+      }
+    }
+
+    print("UDAH ABIS HANTAR");
+    return storageURL;
+  }
+
+  Future<List<ProjectLogs>> getLogs(String uid) async {
+    List<ProjectLogs> projectLogs = [];
+    await _proposalCollection
+        .doc(uid)
+        .collection("Logs")
+        .get()
+        .then((snapshot) {
+      snapshot.docs.forEach((element) {
+        if (element.id != uid) {
+          projectLogs.add(ProjectLogs.fromMap(element.data(), element.id));
+        }
+      });
+    });
+    return projectLogs;
   }
 }

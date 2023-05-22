@@ -46,11 +46,7 @@ class MyApp extends StatelessWidget {
                           StreamProvider<LecturerDetails>.value(
                             value: AuthService().getLecturerProfileStream(
                                 notifier.userUID ?? ""),
-                            initialData: LecturerDetails(
-                              email: '',
-                              phone: '',
-                              username: '',
-                            ),
+                            initialData: LecturerDetails.initialData(),
                           )
                         } else ...{
                           StreamProvider<StudentDetails>.value(

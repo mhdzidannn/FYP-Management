@@ -7,6 +7,7 @@ import 'package:fyp_management/model/lecturer_titles/fyp_title.dart';
 import 'package:fyp_management/pages/shared/main_drawer.dart';
 import 'package:fyp_management/pages/shared/pdf_viewer.dart';
 import 'package:fyp_management/pages/student/submit_proposal_page.dart';
+import 'package:fyp_management/services/create_file_from_url.dart';
 import 'package:fyp_management/services/lecturer_fyp_title_services.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -111,7 +112,7 @@ class _StudentFypTitleListPage extends State<StudentFypTitleListPage> {
           if (url.isEmpty) {
             return;
           }
-          var file = await createFileOfPdfUrl(url);
+          var file = await FileServices().createFileOfPdfUrl(url);
           listOfFile.add(file);
         },
       );
@@ -257,26 +258,5 @@ class _StudentFypTitleListPage extends State<StudentFypTitleListPage> {
         ],
       ),
     );
-  }
-
-  Future<File> createFileOfPdfUrl(String url) async {
-    Completer<File> completer = Completer();
-    print("Start download file from internet!");
-    try {
-      final filename = url.substring(url.lastIndexOf("/") + 1);
-      var request = await HttpClient().getUrl(Uri.parse(url));
-      var response = await request.close();
-      var bytes = await consolidateHttpClientResponseBytes(response);
-      var dir = await getApplicationDocumentsDirectory();
-      print("Download files");
-      print("${dir.path}/$filename");
-      File file = File("${dir.path}/$filename");
-
-      await file.writeAsBytes(bytes, flush: true);
-      completer.complete(file);
-    } catch (e) {
-      throw Exception('Error parsing asset file!');
-    }
-    return completer.future;
   }
 }

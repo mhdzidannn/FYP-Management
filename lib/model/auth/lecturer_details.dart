@@ -33,4 +33,10 @@ class LecturerDetails {
       'titleSubmitted': titleSubmitted,
     };
   }
+
+  LecturerDetails.initialData() {
+    email = "";
+    username = "";
+    phone = "";
+  }
 }

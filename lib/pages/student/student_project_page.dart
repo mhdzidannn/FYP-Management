@@ -1,13 +1,19 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp_management/model/auth/lecturer_details.dart';
-import 'package:fyp_management/model/lecturer_titles/fyp_title.dart';
+import 'package:fyp_management/model/student/project_logs.dart';
 import 'package:fyp_management/model/student/student_proposal.dart';
 import 'package:fyp_management/notifier/lecturer_title_notifier.dart';
 import 'package:fyp_management/notifier/user_notifier.dart';
 import 'package:fyp_management/pages/shared/main_drawer.dart';
+import 'package:fyp_management/pages/student/project_detail_page.dart';
+import 'package:fyp_management/pages/student/project_log.dart';
+import 'package:fyp_management/services/auth_service.dart';
+import 'package:fyp_management/services/create_file_from_url.dart';
 import 'package:fyp_management/services/student_fyp_title_services.dart';
 import 'package:provider/provider.dart';
 
@@ -19,26 +25,16 @@ class StudentProjectPage extends StatefulWidget {
 }
 
 class _StudentProjectPageState extends State<StudentProjectPage> {
-  final _formKey = GlobalKey<FormState>();
-
-  final _titleController = TextEditingController();
-  final _contentController = TextEditingController();
-
-  final _dismissKeyboard = FocusNode();
-  final _titleFocus = FocusNode();
-  final _contentFocus = FocusNode();
-
-  late bool _newsTitleDone;
-  late bool _newsContentDone;
-
-  List<File>? _files;
-  int? _numberOfFilesSelected;
+  late Stream<List<StudentProject>> _stream;
+  static LecturerDetails? _supervisorDetails;
+  static LecturerDetails? _lecturerDetails;
+  List<File> _proposalFiles = [];
 
   @override
   void initState() {
     super.initState();
-    FYPTitleNotifier notifier =
-        Provider.of<FYPTitleNotifier>(context, listen: false);
+    UserNotifier notifier = Provider.of<UserNotifier>(context, listen: false);
+    _stream = StudentService().getStudentSelectedProject(notifier.userUID!);
   }
 
   @override
@@ -46,67 +42,118 @@ class _StudentProjectPageState extends State<StudentProjectPage> {
     super.dispose();
   }
 
-  /// to change focus to next text field
-  _fieldFocusChange(
-      BuildContext context, FocusNode currentFocus, FocusNode nextFocus) {
-    currentFocus.unfocus();
-    FocusScope.of(context).requestFocus(nextFocus);
+  Future<void> getSupervisorDetail(String uidLecturer) async {
+    _supervisorDetails =
+        await AuthService().getLecturerProfileLocal(uidLecturer);
+  }
+
+  Future<void> getLecturerDetail(String uidLecturer) async {
+    _lecturerDetails = await AuthService().getLecturerProfileLocal(uidLecturer);
+  }
+
+  Future<bool> listOfFutures(StudentProject projectData) async {
+    return Future.wait([
+      getSupervisorDetail(projectData.supervisorDetails),
+      getLecturerDetail(projectData.lecturersDetails ?? ""),
+    ]).then((value) => true).onError((error, stackTrace) => false);
+  }
+
+  loadFiles(StudentProject projectData) {
+    if (projectData.files != null && projectData.files!.isNotEmpty) {
+      projectData.files!.forEach(
+        (element) async {
+          var url = element as String;
+          if (url.isEmpty) {
+            return;
+          }
+          var file = await FileServices().createFileOfPdfUrl(url);
+          _proposalFiles.add(file);
+        },
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<FYPTitleNotifier>(builder: (context, value, widget) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            'Project Management',
-            style: TextStyle(fontSize: 20),
+    return Consumer<FYPTitleNotifier>(
+      builder: (context, value, widget) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text(
+              'Project Management',
+              style: TextStyle(fontSize: 20),
+            ),
           ),
-        ),
-        drawer: MainDrawer(),
-        body: StreamBuilder<List<FYPTitle>>(
-            stream: null,
-            builder: (context, snapshot) {
-              return GestureDetector(
-                  onTap: () =>
-                      FocusScope.of(context).requestFocus(_dismissKeyboard),
-                  child: SizedBox(
-                    height: MediaQuery.of(context).size.height,
-                    child: Form(
-                      key: _formKey,
+          drawer: MainDrawer(),
+          body: StreamBuilder<List<StudentProject>>(
+            stream: _stream,
+            builder: (context, projectData) {
+              if (projectData.hasData && projectData.data!.isNotEmpty) {
+                StudentProject data = projectData.data!.first;
+                loadFiles(data);
+
+                return FutureBuilder<bool>(
+                  future: listOfFutures(projectData.data!.first),
+                  builder: (context, snapshot) {
+                    if (snapshot.data == false) {
+                      return const NotApprovedPage();
+                    }
+                    return SizedBox(
+                      height: MediaQuery.of(context).size.height,
                       child: SingleChildScrollView(
+                        primary: true,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: <Widget>[
-                            const Center(
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(
-                                    vertical: 25, horizontal: 30),
-                                child: Text(
-                                  'Manage your project logs and submissions here.',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                  ),
-                                ),
-                              ),
+                            ExistingProjectDetailPage(
+                              data: data,
+                              lecturerDetails: _lecturerDetails ??
+                                  LecturerDetails.initialData(),
+                              proposalFiles: _proposalFiles,
+                              supervisorDetails: _supervisorDetails ??
+                                  LecturerDetails.initialData(),
                             ),
-
-                            // insert new content here
+                            const Divider(thickness: 1),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                _nameOfFields("Meetings and submission logs"),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    submitLogDialog(data);
+                                  },
+                                  child: const Text("Add"),
+                                )
+                              ],
+                            ),
+                            FutureBuilder<List<ProjectLogs>>(
+                              future: StudentService().getLogs(data.docID!),
+                              builder: (ctx, logsData) {
+                                if (logsData.hasData && logsData.data != null) {
+                                  return ProjectLogPage(data: logsData.data!);
+                                }
+                                return const Center(child: Text("No logs yet"));
+                              },
+                            ),
                           ],
                         ),
                       ),
-                    ),
-                  ));
-            }),
-      );
-    });
+                    );
+                  },
+                );
+              }
+              return const NotApprovedPage();
+            },
+          ),
+        );
+      },
+    );
   }
 
-  Widget _nameOfFields(String fieldName, double top, double left,
-      {bool isMandatory = true}) {
+  Widget _nameOfFields(String fieldName, {bool isMandatory = false}) {
     return Padding(
-        padding: EdgeInsets.only(top: top, left: left),
+        padding: const EdgeInsets.only(top: 10, left: 10),
         child: RichText(
           text: TextSpan(
               style: const TextStyle(color: Colors.black, fontSize: 18),
@@ -122,156 +169,138 @@ class _StudentProjectPageState extends State<StudentProjectPage> {
         ));
   }
 
-  Widget _titleField(FYPTitleNotifier value) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 25, right: 25),
-      child: TextFormField(
-        decoration:
-            const InputDecoration(hintText: 'eg. FYP Management System'),
-        controller: _titleController,
-        focusNode: _titleFocus,
-        onFieldSubmitted: (val) {
-          _fieldFocusChange(context, _titleFocus, _contentFocus);
-        },
-        maxLines: 1,
-        textInputAction: TextInputAction.next,
-        maxLength: 100,
-        validator: (value) =>
-            value == null || value.isEmpty ? 'Title must not be empty' : null,
-        onChanged: (val) {
-          setState(() {
-            if (val.isNotEmpty) {
-              if (!_newsTitleDone) {
-                _newsTitleDone = !_newsTitleDone;
-                value.updateProgressBarIndicator(true);
-              }
-            } else {
-              if (_newsTitleDone) {
-                _newsTitleDone = false;
-                value.updateProgressBarIndicator(false);
-              }
-            }
-          });
-        },
-      ),
-    );
-  }
+  submitLogDialog(StudentProject projectData) {
+    final _formKey = GlobalKey<FormState>();
+    final _summaryController = TextEditingController();
+    late bool _summaryDone = false;
 
-  Widget _contentField(FYPTitleNotifier value) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 25, right: 25),
-      child: TextFormField(
-        decoration: const InputDecoration(
-            hintText: 'eg. Design a system that manages projects ...'),
-        controller: _contentController,
-        focusNode: _contentFocus,
-        maxLines: 1,
-        textInputAction: TextInputAction.next,
-        maxLength: 5000,
-        validator: (value) =>
-            value == null || value.isEmpty ? 'Summary must not be empty' : null,
-        onChanged: (val) {
-          setState(() {
-            if (val.isNotEmpty) {
-              if (!_newsContentDone) {
-                _newsContentDone = !_newsContentDone;
-              }
-            } else {
-              if (_newsContentDone) {
-                _newsContentDone = false;
-              }
-            }
-          });
-        },
-      ),
-    );
-  }
+    List<File>? _filesToUpload;
+    int _numberOfFilesSelected = 0;
 
-  Widget _addFile() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 20, left: 50, right: 50, bottom: 50),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Container(
-            height: 320,
-            width: 320,
-            decoration: BoxDecoration(
-              border: Border.all(),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: _files == null
-                ? TextButton(
-                    onPressed: () {
-                      _pickFiles();
-                    },
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const <Widget>[
-                          Icon(Icons.file_upload),
-                          Text('You have not yet upload any documents'),
-                        ],
-                      ),
-                    ),
-                  )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Text(
-                        'Number of files selected: $_numberOfFilesSelected',
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          _pickFiles();
-                        },
-                        child: Container(
-                          constraints: const BoxConstraints(minHeight: 30.0),
-                          alignment: Alignment.center,
-                          child: const Text(
-                            'Click here to reselect files',
-                            style: TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.red,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      )
-                    ],
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _pickFiles() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      allowMultiple: true,
-      type: FileType.custom,
-      allowedExtensions: ['pdf', 'png', 'jpg', 'jpeg', 'docx'],
-    );
-    if (result != null) {
-      _files = result.paths.map((path) => File(path!)).toList();
-      _numberOfFilesSelected = result.count;
-      setState(() {});
+    Future<FilePickerResult?> pickFiles() async {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        allowMultiple: false,
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'png', 'jpg', 'jpeg', 'docx'],
+      );
+      return result;
     }
-    if (!mounted) return;
+
+    Widget cancelButton = TextButton(
+      child: const Text("Cancel"),
+      onPressed: () {
+        Navigator.pop(context, true);
+      },
+    );
+    Widget launchButton =
+        Consumer<UserNotifier>(builder: (context, notifier, widget) {
+      return TextButton(
+        child: const Text("Submit"),
+        onPressed: () {
+          if (_formKey.currentState!.validate()) {
+            ProjectLogs model = ProjectLogs(
+              projectUID: projectData.docID!,
+              uid: notifier.userUID!,
+              filesToUpload: _filesToUpload,
+              dateCreated: Timestamp.now(),
+              summary: _summaryController.text,
+            );
+            _onSubmitPressed(model, notifier);
+          }
+        },
+      );
+    });
+    AlertDialog alert = AlertDialog(
+      title: const Text("Log Submission"),
+      content: StatefulBuilder(
+        builder: (BuildContext context, StateSetter setState) {
+          return SizedBox(
+            width: double.maxFinite,
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    decoration: const InputDecoration(
+                        hintText: 'eg. FYP Management System'),
+                    controller: _summaryController,
+                    maxLines: 1,
+                    textInputAction: TextInputAction.done,
+                    maxLength: 100,
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Title must not be empty'
+                        : null,
+                    onChanged: (val) {
+                      setState(() {
+                        if (val.isNotEmpty) {
+                          if (!_summaryDone) {
+                            _summaryDone = !_summaryDone;
+                          }
+                        } else {
+                          if (_summaryDone) {
+                            _summaryDone = false;
+                          }
+                        }
+                      });
+                    },
+                  ),
+                  _numberOfFilesSelected == 0
+                      ? GestureDetector(
+                          onTap: () async {
+                            var result = await pickFiles();
+                            if (result != null) {
+                              setState(() {
+                                _filesToUpload = result.paths
+                                    .map((path) => File(path!))
+                                    .toList();
+                                _numberOfFilesSelected = result.count;
+                              });
+                            }
+                          },
+                          child: const Text('Click here to upload file'),
+                        )
+                      : GestureDetector(
+                          onTap: () async {
+                            var result = await pickFiles();
+                            if (result != null) {
+                              setState(
+                                () {
+                                  _filesToUpload = result.paths
+                                      .map((path) => File(path!))
+                                      .toList();
+                                  _numberOfFilesSelected = result.count;
+                                },
+                              );
+                            }
+                          },
+                          child: const Text('Reupload file'),
+                        ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+      actions: [
+        cancelButton,
+        launchButton,
+      ],
+    );
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
   }
 
-  Future<bool?> _onSubmitPressed(StudentProject model, UserNotifier userData) {
+  Future<bool?> _onSubmitPressed(ProjectLogs model, UserNotifier userData) {
     return showDialog(
       context: context,
       builder: (context) => FutureBuilder<bool>(
-        future: StudentService().submitProposal(model, userData),
+        future: StudentService().addLog(userData, model),
         builder: (context, snapshot) {
           return AlertDialog(
             content: SizedBox(
@@ -290,7 +319,7 @@ class _StudentProjectPageState extends State<StudentProjectPage> {
                                 if (snapshot.hasData) ...{
                                   const TextSpan(
                                       text:
-                                          'You have succesfully posted a FYP Title!'),
+                                          'You have succesfully updated the logs!'),
                                 } else ...{
                                   const TextSpan(
                                       text:
@@ -329,6 +358,40 @@ class _StudentProjectPageState extends State<StudentProjectPage> {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class NotApprovedPage extends StatelessWidget {
+  const NotApprovedPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const <Widget>[
+            SizedBox(
+              height: 40,
+              width: 40,
+              child: Icon(
+                Icons.cancel_presentation_sharp,
+                color: Colors.red,
+                size: 40,
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'You proposal is not approved yet',
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -10,6 +10,7 @@ import 'package:fyp_management/pages/shared/main_drawer.dart';
 import 'package:fyp_management/pages/shared/pdf_viewer.dart';
 import 'package:fyp_management/services/approval_services.dart';
 import 'package:fyp_management/services/auth_service.dart';
+import 'package:fyp_management/services/create_file_from_url.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../notifier/user_notifier.dart';
@@ -200,7 +201,7 @@ class _ViewProposalPage extends State<ViewProposalPage> {
           if (url.isEmpty) {
             return;
           }
-          var file = await createFileOfPdfUrl(url);
+          var file = await FileServices().createFileOfPdfUrl(url);
           listOfFile.add(file);
         },
       );
@@ -293,26 +294,5 @@ class _ViewProposalPage extends State<ViewProposalPage> {
         );
       },
     );
-  }
-
-  Future<File> createFileOfPdfUrl(String url) async {
-    Completer<File> completer = Completer();
-    print("Start download file from internet!");
-    try {
-      final filename = url.substring(url.lastIndexOf("/") + 1);
-      var request = await HttpClient().getUrl(Uri.parse(url));
-      var response = await request.close();
-      var bytes = await consolidateHttpClientResponseBytes(response);
-      var dir = await getApplicationDocumentsDirectory();
-      print("Download files");
-      print("${dir.path}/$filename");
-      File file = File("${dir.path}/$filename");
-
-      await file.writeAsBytes(bytes, flush: true);
-      completer.complete(file);
-    } catch (e) {
-      throw Exception('Error parsing asset file!');
-    }
-    return completer.future;
   }
 }
