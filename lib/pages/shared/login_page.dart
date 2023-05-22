@@ -113,12 +113,12 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget showAppName() {
     return Padding(
-      padding: const EdgeInsets.only(top: 20),
+      padding: const EdgeInsets.only(top: 0),
       child: Center(
         child: Text(
-          'My Health 2.0',
+          'UUM FYP Management',
           style: GoogleFonts.alexandria(
-            fontSize: 32,
+            fontSize: 28,
             color: Colors.blue[800],
           ),
         ),

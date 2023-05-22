@@ -390,7 +390,7 @@ class NotApprovedPage extends StatelessWidget {
             Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                'You proposal is not approved yet',
+                'Your proposal is not approved yet',
                 style: TextStyle(fontSize: 16),
               ),
             ),
