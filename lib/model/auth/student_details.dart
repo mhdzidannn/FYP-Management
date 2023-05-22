@@ -3,22 +3,25 @@ class StudentDetails {
   late String username;
   late String phone;
   String? lecturerUID;
-  List? appliedTitle;
+  List? studentProposal;
+  String? uid;
 
   StudentDetails({
     required this.email,
     required this.username,
     required this.phone,
     this.lecturerUID,
-    this.appliedTitle,
+    this.studentProposal,
+    this.uid,
   });
 
-  StudentDetails.fromMap(Map<String, dynamic>? data) {
+  StudentDetails.fromMap(Map<String, dynamic>? data, String documentID) {
     email = data?['email'];
     username = data?['username'];
     phone = data?['phone'];
     lecturerUID = data?['lecturerUID'];
-    appliedTitle = data?['appliedTitle'];
+    studentProposal = data?['student_proposal'];
+    uid = documentID;
   }
 
   Map<String, dynamic> toMap() {
@@ -27,7 +30,7 @@ class StudentDetails {
       'username': username,
       'phone': phone,
       'lecturerUID': lecturerUID,
-      'appliedTitle': appliedTitle,
+      'student_proposal': studentProposal,
     };
   }
 }

@@ -7,8 +7,6 @@ import 'package:fyp_management/model/lecturer_titles/fyp_title.dart';
 import 'package:fyp_management/notifier/user_notifier.dart';
 
 class FYPTitleService {
-  final CollectionReference _publicTitlesCollection =
-      FirebaseFirestore.instance.collection('PublicTitles');
   final CollectionReference _allTitlesCollection =
       FirebaseFirestore.instance.collection('AllTitles');
 
@@ -28,7 +26,6 @@ class FYPTitleService {
           .then((value) async {
         if (user.lecturerMode!) {
           model.setFileURL = value[0];
-          _publicTitlesCollection.add(model.toMap());
           _allTitlesCollection.add(model.toMap()).then((doc) {
             _lectDocRef.doc(user.userUID).update({
               'fyp_title': FieldValue.arrayUnion([doc.id])
@@ -38,7 +35,6 @@ class FYPTitleService {
           });
         } else {
           model.setFileURL = value[0];
-          _publicTitlesCollection.add(model.toMap());
           _allTitlesCollection.add(model.toMap()).then((doc) {
             _studentDocRef.doc(user.userUID).update({
               'fyp_title': FieldValue.arrayUnion([doc.id])
@@ -105,7 +101,7 @@ class FYPTitleService {
   }
 
   Stream<List<FYPTitle>> getTitleForStudent() {
-    return _publicTitlesCollection
+    return _allTitlesCollection
         .orderBy('dateCreated', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs
@@ -123,8 +119,6 @@ class FYPTitleService {
       batchWrite.delete(_allTitlesCollection.doc(dataModel.docID));
 
       await batchWrite.commit().then((_) async {
-        _allTitlesCollection.doc(dataModel.uid).delete();
-        _publicTitlesCollection.doc(dataModel.uid).delete();
         if (user.lecturerMode!) {
           _lectDocRef.doc(user.userUID).update({
             'fyp_title': FieldValue.arrayRemove([dataModel.uid])

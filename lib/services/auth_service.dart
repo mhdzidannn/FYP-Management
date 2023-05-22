@@ -31,7 +31,7 @@ class AuthService {
         .doc(uid)
         .snapshots()
         .map((event) {
-      return LecturerDetails.fromMap(event.data());
+      return LecturerDetails.fromMap(event.data(), event.id);
     });
   }
 
@@ -42,7 +42,7 @@ class AuthService {
         .collection("UserProfile")
         .doc(uid)
         .snapshots()
-        .map((event) => StudentDetails.fromMap(event.data()));
+        .map((event) => StudentDetails.fromMap(event.data(), event.id));
   }
 
   Future<LecturerDetails> getLecturerProfileLocal(String uid) async {
@@ -52,7 +52,8 @@ class AuthService {
         .collection("LecturerProfile")
         .doc(uid)
         .get()
-        .then((snapshot) => LecturerDetails.fromMap(snapshot.data()));
+        .then((snapshot) =>
+            LecturerDetails.fromMap(snapshot.data(), snapshot.id));
   }
 
   Future<StudentDetails> getStudentProfileLocal(String uid) async {
@@ -63,7 +64,7 @@ class AuthService {
         .doc(uid)
         .get()
         .then((snapshot) {
-      return StudentDetails.fromMap(snapshot.data());
+      return StudentDetails.fromMap(snapshot.data(), snapshot.id);
     });
   }
 

@@ -4,9 +4,9 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp_management/model/lecturer_titles/fyp_title.dart';
-import 'package:fyp_management/pages/lecturer/lecturer_fyp_title_create.dart';
 import 'package:fyp_management/pages/shared/main_drawer.dart';
 import 'package:fyp_management/pages/shared/pdf_viewer.dart';
+import 'package:fyp_management/pages/student/submit_proposal_page.dart';
 import 'package:fyp_management/services/lecturer_fyp_title_services.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -127,17 +127,22 @@ class _StudentFypTitleListPage extends State<StudentFypTitleListPage> {
       Widget launchButton =
           Consumer<UserNotifier>(builder: (context, notifier, widget) {
         return TextButton(
-          child: const Text("Delete"),
+          child: const Text("Confirm"),
           onPressed: () {
-            FYPTitleService().deleteFypTitle(data, notifier);
             Navigator.pop(context, true);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SubmitProposalPage(fypTitle: data),
+              ),
+            );
           },
         );
       });
       AlertDialog alert = AlertDialog(
-        title: const Text("Notice"),
+        title: const Text("You are about to submit a proposal"),
         content: const Text(
-            "Clicking 'Delete' will remove the title from the listing. \n\nProceed?"),
+            "Once confirmed this title, you cannot change title unless contact administrator. \n\nProceed?"),
         actions: [
           cancelButton,
           launchButton,
@@ -258,19 +263,20 @@ class _StudentFypTitleListPage extends State<StudentFypTitleListPage> {
     Completer<File> completer = Completer();
     print("Start download file from internet!");
     try {
+      final filename = url.substring(url.lastIndexOf("/") + 1);
       var request = await HttpClient().getUrl(Uri.parse(url));
       var response = await request.close();
       var bytes = await consolidateHttpClientResponseBytes(response);
       var dir = await getApplicationDocumentsDirectory();
       print("Download files");
-      File file = File("${dir.path}");
+      print("${dir.path}/$filename");
+      File file = File("${dir.path}/$filename");
 
       await file.writeAsBytes(bytes, flush: true);
       completer.complete(file);
     } catch (e) {
       throw Exception('Error parsing asset file!');
     }
-
     return completer.future;
   }
 }

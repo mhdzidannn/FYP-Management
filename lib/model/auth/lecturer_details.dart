@@ -4,6 +4,7 @@ class LecturerDetails {
   late String phone;
   List? students;
   List? titleSubmitted;
+  String? uid;
 
   LecturerDetails({
     required this.email,
@@ -11,14 +12,16 @@ class LecturerDetails {
     required this.phone,
     this.students,
     this.titleSubmitted,
+    this.uid,
   });
 
-  LecturerDetails.fromMap(Map<String, dynamic>? data) {
+  LecturerDetails.fromMap(Map<String, dynamic>? data, String documentID) {
     email = data?['email'];
     username = data?['username'];
     phone = data?['phone'];
     students = data?['students'];
     titleSubmitted = data?['titleSubmitted'];
+    uid = documentID;
   }
 
   Map<String, dynamic> toMap() {

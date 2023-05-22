@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fyp_management/pages/lecturer/lecturer_fyp_title_list.dart';
+import 'package:fyp_management/pages/lecturer/view_proposal_page.dart';
 import 'package:fyp_management/pages/student/student_fyp_title_list.dart';
-import 'package:fyp_management/pages/student/temp_page.dart';
+import 'package:fyp_management/pages/shared/temp_page.dart';
 import 'package:fyp_management/pages/shared/main_drawer.dart';
+import 'package:fyp_management/pages/student/student_project_page.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:provider/provider.dart';
@@ -16,8 +18,8 @@ const List<GButton> studentNavBar = [
     text: 'FYP Titles',
   ),
   GButton(
-    icon: Icons.rss_feed,
-    text: 'Active titles',
+    icon: LineIcons.powerpointFile,
+    text: 'Project detail',
   ),
 ];
 
@@ -27,8 +29,8 @@ const List<GButton> lecturerNavBar = [
     text: 'FYP Titles',
   ),
   GButton(
-    icon: Icons.rss_feed,
-    text: 'Active titles',
+    icon: LineIcons.powerpointFile,
+    text: 'Students Proposal',
   ),
 ];
 
@@ -87,10 +89,10 @@ class _HomePageState extends State<HomePage> {
             children: <Widget>[
               if (notifier.lecturerMode!) ...{
                 const LectFYPTitleListPage(),
-                TempPage(key: UniqueKey()),
+                const ViewProposalPage(),
               } else ...{
                 StudentFypTitleListPage(key: UniqueKey()),
-                TempPage(key: UniqueKey()),
+                StudentProjectPage(key: UniqueKey()),
               }
             ],
           ),
