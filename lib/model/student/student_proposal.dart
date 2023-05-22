@@ -31,6 +31,7 @@ class StudentProject {
     this.filesToUpload,
     required this.supervisorDetails,
     this.lecturersDetails,
+    this.supervisorGrades,
   });
 
   set setFileURL(List data) {
@@ -47,6 +48,7 @@ class StudentProject {
       'files': files,
       'supervisorDetails': supervisorDetails,
       'lecturersDetails': lecturersDetails,
+      'supervisorGrades': supervisorGrades,
     };
   }
 
@@ -60,5 +62,6 @@ class StudentProject {
     docID = documentID;
     supervisorDetails = data?["supervisorDetails"];
     lecturersDetails = data?["lecturersDetails"];
+    supervisorGrades = data?["supervisorGrades"];
   }
 }

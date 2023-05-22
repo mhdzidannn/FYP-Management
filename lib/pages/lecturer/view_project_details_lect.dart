@@ -14,27 +14,36 @@ import 'package:fyp_management/pages/student/project_detail_page.dart';
 import 'package:fyp_management/pages/student/project_log.dart';
 import 'package:fyp_management/services/auth_service.dart';
 import 'package:fyp_management/services/create_file_from_url.dart';
+import 'package:fyp_management/services/lecturer_fyp_title_services.dart';
 import 'package:fyp_management/services/student_fyp_title_services.dart';
 import 'package:provider/provider.dart';
 
-class StudentProjectPage extends StatefulWidget {
-  const StudentProjectPage({super.key});
+class LectProjectDetailPage extends StatefulWidget {
+  final StudentProject data;
+
+  const LectProjectDetailPage({
+    required this.data,
+    super.key,
+  });
 
   @override
-  State<StudentProjectPage> createState() => _StudentProjectPageState();
+  State<LectProjectDetailPage> createState() => _LectProjectDetailPageState();
 }
 
-class _StudentProjectPageState extends State<StudentProjectPage> {
+class _LectProjectDetailPageState extends State<LectProjectDetailPage> {
   late Stream<List<StudentProject>> _stream;
   static LecturerDetails? _supervisorDetails;
   static LecturerDetails? _lecturerDetails;
   List<File> _proposalFiles = [];
 
+  final _formKey = GlobalKey<FormState>();
+  final _gradeController = TextEditingController();
+  bool _gradeDone = false;
+
   @override
   void initState() {
     super.initState();
-    UserNotifier notifier = Provider.of<UserNotifier>(context, listen: false);
-    _stream = StudentService().getStudentSelectedProject(notifier.userUID!);
+    _stream = StudentService().getStudentSelectedProject(widget.data.uid);
   }
 
   @override
@@ -84,7 +93,6 @@ class _StudentProjectPageState extends State<StudentProjectPage> {
               style: TextStyle(fontSize: 20),
             ),
           ),
-          drawer: MainDrawer(),
           body: StreamBuilder<List<StudentProject>>(
             stream: _stream,
             builder: (context, projectData) {
@@ -115,18 +123,7 @@ class _StudentProjectPageState extends State<StudentProjectPage> {
                                   LecturerDetails.initialData(),
                             ),
                             const Divider(thickness: 1),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                _nameOfFields("Meetings and submission logs"),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    submitLogDialog(data);
-                                  },
-                                  child: const Text("Add"),
-                                )
-                              ],
-                            ),
+                            _nameOfFields("Meetings and submission logs"),
                             FutureBuilder<List<ProjectLogs>>(
                               future: StudentService().getLogs(data.docID!),
                               builder: (ctx, logsData) {
@@ -140,6 +137,71 @@ class _StudentProjectPageState extends State<StudentProjectPage> {
                             _nameOfFields(
                                 "Grade given: ${data.supervisorGrades ?? "Not given yet"}"),
                             const Divider(thickness: 1),
+                            Form(
+                              key: _formKey,
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  _nameOfFields("Grade"),
+                                  const SizedBox(width: 10),
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 10.0),
+                                    child: Consumer<UserNotifier>(
+                                        builder: (context, notifier, widget) {
+                                      return ElevatedButton(
+                                        onPressed: () {
+                                          if (_formKey.currentState!
+                                              .validate()) {
+                                            StudentProject model =
+                                                StudentProject(
+                                              docID: data.docID,
+                                              uid: data.uid,
+                                              supervisorGrades:
+                                                  _gradeController.text,
+                                              dateCreated: Timestamp.now(),
+                                              title: '',
+                                              supervisorDetails: '',
+                                            );
+                                            _onSubmitPressed(model, notifier);
+                                          }
+                                        },
+                                        child: const Text("Submit"),
+                                      );
+                                    }),
+                                  )
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: TextFormField(
+                                decoration: const InputDecoration(
+                                    hintText: 'eg. 100 / A / 86 / A-'),
+                                controller: _gradeController,
+                                maxLines: 1,
+                                textInputAction: TextInputAction.done,
+                                maxLength: 3,
+                                validator: (value) =>
+                                    value == null || value.isEmpty
+                                        ? 'Grade must not be empty'
+                                        : null,
+                                onChanged: (val) {
+                                  setState(() {
+                                    if (val.isNotEmpty) {
+                                      if (!_gradeDone) {
+                                        _gradeDone = !_gradeDone;
+                                      }
+                                    } else {
+                                      if (_gradeDone) {
+                                        _gradeDone = false;
+                                      }
+                                    }
+                                  });
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 40),
                           ],
                         ),
                       ),
@@ -173,138 +235,11 @@ class _StudentProjectPageState extends State<StudentProjectPage> {
         ));
   }
 
-  submitLogDialog(StudentProject projectData) {
-    final _formKey = GlobalKey<FormState>();
-    final _summaryController = TextEditingController();
-    late bool _summaryDone = false;
-
-    List<File>? _filesToUpload;
-    int _numberOfFilesSelected = 0;
-
-    Future<FilePickerResult?> pickFiles() async {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        allowMultiple: false,
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'png', 'jpg', 'jpeg', 'docx'],
-      );
-      return result;
-    }
-
-    Widget cancelButton = TextButton(
-      child: const Text("Cancel"),
-      onPressed: () {
-        Navigator.pop(context, true);
-      },
-    );
-    Widget launchButton =
-        Consumer<UserNotifier>(builder: (context, notifier, widget) {
-      return TextButton(
-        child: const Text("Submit"),
-        onPressed: () {
-          if (_formKey.currentState!.validate()) {
-            ProjectLogs model = ProjectLogs(
-              projectUID: projectData.docID!,
-              uid: notifier.userUID!,
-              filesToUpload: _filesToUpload,
-              dateCreated: Timestamp.now(),
-              summary: _summaryController.text,
-            );
-            _onSubmitPressed(model, notifier);
-          }
-        },
-      );
-    });
-    AlertDialog alert = AlertDialog(
-      title: const Text("Log Submission"),
-      content: StatefulBuilder(
-        builder: (BuildContext context, StateSetter setState) {
-          return SizedBox(
-            width: double.maxFinite,
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    decoration: const InputDecoration(
-                        hintText: 'eg. FYP Management System'),
-                    controller: _summaryController,
-                    maxLines: 1,
-                    textInputAction: TextInputAction.done,
-                    maxLength: 100,
-                    validator: (value) => value == null || value.isEmpty
-                        ? 'Title must not be empty'
-                        : null,
-                    onChanged: (val) {
-                      setState(() {
-                        if (val.isNotEmpty) {
-                          if (!_summaryDone) {
-                            _summaryDone = !_summaryDone;
-                          }
-                        } else {
-                          if (_summaryDone) {
-                            _summaryDone = false;
-                          }
-                        }
-                      });
-                    },
-                  ),
-                  _numberOfFilesSelected == 0
-                      ? GestureDetector(
-                          onTap: () async {
-                            var result = await pickFiles();
-                            if (result != null) {
-                              setState(() {
-                                _filesToUpload = result.paths
-                                    .map((path) => File(path!))
-                                    .toList();
-                                _numberOfFilesSelected = result.count;
-                              });
-                            }
-                          },
-                          child: const Text('Click here to upload file'),
-                        )
-                      : GestureDetector(
-                          onTap: () async {
-                            var result = await pickFiles();
-                            if (result != null) {
-                              setState(
-                                () {
-                                  _filesToUpload = result.paths
-                                      .map((path) => File(path!))
-                                      .toList();
-                                  _numberOfFilesSelected = result.count;
-                                },
-                              );
-                            }
-                          },
-                          child: const Text('Reupload file'),
-                        ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-      actions: [
-        cancelButton,
-        launchButton,
-      ],
-    );
-    // show the dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
-  }
-
-  Future<bool?> _onSubmitPressed(ProjectLogs model, UserNotifier userData) {
+  Future<bool?> _onSubmitPressed(StudentProject model, UserNotifier userData) {
     return showDialog(
       context: context,
       builder: (context) => FutureBuilder<bool>(
-        future: StudentService().addLog(userData, model),
+        future: FYPTitleService().submitGrade(userData, model),
         builder: (context, snapshot) {
           return AlertDialog(
             content: SizedBox(
@@ -323,7 +258,7 @@ class _StudentProjectPageState extends State<StudentProjectPage> {
                                 if (snapshot.hasData) ...{
                                   const TextSpan(
                                       text:
-                                          'You have succesfully updated the logs!'),
+                                          'You have succesfully give a grade!'),
                                 } else ...{
                                   const TextSpan(
                                       text:

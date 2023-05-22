@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fyp_management/model/auth/lecturer_details.dart';
 import 'package:fyp_management/model/auth/student_details.dart';
@@ -121,7 +120,6 @@ class _ViewProposalPage extends State<ViewProposalPage> {
           itemBuilder: (context, index) {
             return ListTile(
               onTap: () {
-                /// just create another dialog
                 confirmationDialog(
                   _listOfLecturers[index].username,
                   data.docID,

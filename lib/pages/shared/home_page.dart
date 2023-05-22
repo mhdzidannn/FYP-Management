@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fyp_management/pages/lecturer/lecturer_fyp_title_list.dart';
 import 'package:fyp_management/pages/lecturer/view_proposal_page.dart';
+import 'package:fyp_management/pages/lecturer/view_students_projects.dart';
 import 'package:fyp_management/pages/student/student_fyp_title_list.dart';
 import 'package:fyp_management/pages/shared/temp_page.dart';
 import 'package:fyp_management/pages/shared/main_drawer.dart';
@@ -31,6 +32,10 @@ const List<GButton> lecturerNavBar = [
   GButton(
     icon: LineIcons.powerpointFile,
     text: 'Students Proposal',
+  ),
+  GButton(
+    icon: LineIcons.projectDiagram,
+    text: 'Students Project Details',
   ),
 ];
 
@@ -90,6 +95,7 @@ class _HomePageState extends State<HomePage> {
               if (notifier.lecturerMode!) ...{
                 const LectFYPTitleListPage(),
                 const ViewProposalPage(),
+                const ViewStudentsProjectPage(),
               } else ...{
                 StudentFypTitleListPage(key: UniqueKey()),
                 StudentProjectPage(key: UniqueKey()),

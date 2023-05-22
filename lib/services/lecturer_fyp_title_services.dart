@@ -4,9 +4,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/services.dart';
 import 'package:fyp_management/model/lecturer_titles/fyp_title.dart';
+import 'package:fyp_management/model/student/student_proposal.dart';
 import 'package:fyp_management/notifier/user_notifier.dart';
 
 class FYPTitleService {
+  final CollectionReference _proposalCollection =
+      FirebaseFirestore.instance.collection('StudentProposals');
+
   final CollectionReference _allTitlesCollection =
       FirebaseFirestore.instance.collection('AllTitles');
 
@@ -132,6 +136,31 @@ class FYPTitleService {
     } catch (e) {
       print(
           "[FYP Title] Error during deleting your FYP Title : ${e.toString()}");
+    }
+  }
+
+  Stream<List<StudentProject>> getApprovedTitle(String uid) {
+    return _proposalCollection
+        .where('supervisorDetails', isEqualTo: uid)
+        .where('lecturersDetails', isNull: false)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((data) => StudentProject.fromMap(
+                  data.data() as Map<String, dynamic>?,
+                  data.id,
+                ))
+            .toList());
+  }
+
+  Future<bool> submitGrade(UserNotifier user, StudentProject model) async {
+    try {
+      _proposalCollection.doc(model.docID!).update({
+        'supervisorGrades': model.supervisorGrades,
+      });
+      return true;
+    } catch (e) {
+      print("[StudentService] Error in adding title : ${e.toString()}");
+      return false;
     }
   }
 }
